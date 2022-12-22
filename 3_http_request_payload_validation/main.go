@@ -25,6 +25,29 @@ func main() {
 	e := echo.New()
 	e.Validator = &CustomValidator{validator: validator.New()}
 
+	// Error via API
+	e.HTTPErrorHandler = func(err error, ctx echo.Context) {
+		report, ok := err.(*echo.HTTPError)
+		if !ok {
+			report = echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+		ctx.Logger().Error(report)
+		ctx.JSON(report.Code, report)
+	}
+
+	// Error Via PAGE
+	// e.HTTPErrorHandler = func(err error, ctx echo.Context) {
+	// 	report, ok := err.(*echo.HTTPError)
+	// 	if !ok {
+	// 		report = echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	// 	}
+
+	// 	errPage := fmt.Sprintf("%d.html", report.Code)
+	// 	if err := ctx.File(errPage); err != nil {
+	// 		ctx.HTML(report.Code, "Errrrorrrrr")
+	// 	}
+	// }
+
 	e.POST("/users", func(ctx echo.Context) error {
 		u := new(User)
 		if err := ctx.Bind(u); err != nil {
